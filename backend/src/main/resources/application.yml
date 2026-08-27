@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: codemind-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/codemind
+    username: codemind
+    password: codemind
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # NOTE: use 'update' during dev only. NEVER use 'create-drop' — see dev-practices
+      # lesson: create-drop caused data loss on a previous project.
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    com.codemind: DEBUG
+
+codemind:
+  workspace-dir: C:/codemind/workspace
