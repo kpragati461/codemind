@@ -3,6 +3,7 @@ package com.codemind.service;
 import com.codemind.domain.Project;
 import com.codemind.domain.ProjectStatus;
 import com.codemind.repo.ProjectRepository;
+import com.codemind.service.auth.AuthService;
 import com.codemind.web.dto.CreateProjectRequest;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +17,12 @@ public class ProjectService {
 
     private final ProjectRepository projects;
     private final IngestionWorker ingestionWorker;
+    private final AuthService authService;
 
-    public ProjectService(ProjectRepository projects, IngestionWorker ingestionWorker) {
+    public ProjectService(ProjectRepository projects, IngestionWorker ingestionWorker, AuthService authService) {
         this.projects = projects;
         this.ingestionWorker = ingestionWorker;
+        this.authService = authService;
     }
 
     /**
@@ -29,11 +32,12 @@ public class ProjectService {
      * looks the project up, otherwise the worker can run before the row is visible and the project
      * stays QUEUED forever.
      */
-    public Project create(CreateProjectRequest request) {
+    public Project create(CreateProjectRequest request, UUID ownerId) {
         String gitUrl = request.gitUrl().trim();
         validateGitUrl(gitUrl);
 
         Project project = new Project();
+        project.setOwner(authService.requireUser(ownerId));
         project.setGitUrl(gitUrl);
         project.setName(resolveName(request.name(), gitUrl));
         project.setStatus(ProjectStatus.QUEUED);
@@ -42,8 +46,8 @@ public class ProjectService {
         return saved;
     }
 
-    public Project reingest(UUID id) {
-        Project project = get(id);
+    public Project reingest(UUID id, UUID ownerId) {
+        Project project = get(id, ownerId);
         if (project.getStatus() == ProjectStatus.INDEXING) {
             throw new IllegalStateException("Project is already being indexed");
         }
@@ -54,12 +58,16 @@ public class ProjectService {
         return saved;
     }
 
-    public List<Project> list() {
-        return projects.findAllByOrderByCreatedAtDesc();
+    public List<Project> list(UUID ownerId) {
+        return projects.findAllByOwnerIdOrderByCreatedAtDesc(ownerId);
     }
 
-    public Project get(UUID id) {
-        return projects.findById(id).orElseThrow(() -> new ProjectNotFoundException(id));
+    /**
+     * Another user's project is reported as not found rather than forbidden, so ids can't be probed
+     * to learn which projects exist.
+     */
+    public Project get(UUID id, UUID ownerId) {
+        return projects.findByIdAndOwnerId(id, ownerId).orElseThrow(() -> new ProjectNotFoundException(id));
     }
 
     /**

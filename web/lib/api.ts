@@ -1,3 +1,5 @@
+import { clearSession, getToken } from "@/lib/auth";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type ProjectStatus = "QUEUED" | "INDEXING" | "COMPLETED" | "FAILED";
@@ -32,6 +34,18 @@ export interface Project {
   updatedAt: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  expiresAt: string;
+  user: User;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -41,16 +55,29 @@ export class ApiError extends Error {
   }
 }
 
+/** Login and register answer 401 for bad credentials; that isn't an expired session. */
+const CREDENTIAL_PATHS = ["/api/auth/login", "/api/auth/register"];
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
       ...init,
-      headers: { "Content-Type": "application/json", ...init?.headers },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
       cache: "no-store",
     });
   } catch {
     throw new ApiError(`Can't reach the CodeMind API at ${API_URL}. Is it running?`, 0);
+  }
+  if (res.status === 401 && !CREDENTIAL_PATHS.includes(path)) {
+    // Missing, expired or revoked token. Clearing the session makes <AuthGate> send the user to
+    // /login (and back here afterwards).
+    clearSession("expired");
   }
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
@@ -66,6 +93,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  register: (email: string, password: string) =>
+    request<AuthResponse>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  login: (email: string, password: string) =>
+    request<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  me: () => request<User>("/api/auth/me"),
   listProjects: () => request<Project[]>("/api/projects"),
   getProject: (id: string) => request<Project>(`/api/projects/${encodeURIComponent(id)}`),
   createProject: (gitUrl: string, name?: string) =>

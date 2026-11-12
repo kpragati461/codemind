@@ -24,6 +24,11 @@ spring:
 codemind:
   workspace: ${CODEMIND_WORKSPACE:${user.home}/.codemind}
   analysis-url: ${CODEMIND_ANALYSIS_URL:http://localhost:8000}
+  jwt:
+    # HMAC-SHA256 signing key (>= 32 bytes). The default is for local development only;
+    # set CODEMIND_JWT_SECRET anywhere else.
+    secret: ${CODEMIND_JWT_SECRET:codemind-local-dev-secret-change-me-0123456789}
+    ttl: ${CODEMIND_JWT_TTL:24h}
 
 ---
 spring:

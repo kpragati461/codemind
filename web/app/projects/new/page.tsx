@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { Field, inputClass } from "@/components/Field";
 
 const EXAMPLES = [
   "https://github.com/spring-projects/spring-petclinic",
@@ -92,31 +93,6 @@ export default function NewProjectPage() {
           </button>
         </div>
       </form>
-    </div>
-  );
-}
-
-const inputClass =
-  "w-full rounded-md border border-line bg-bg px-3 py-2 font-mono text-sm outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/30";
-
-function Field({
-  label,
-  htmlFor,
-  hint,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="text-xs text-muted">{hint}</p>}
     </div>
   );
 }
