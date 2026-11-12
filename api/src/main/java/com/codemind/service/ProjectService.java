@@ -55,7 +55,7 @@ public class ProjectService {
     }
 
     public List<Project> list() {
-        return projects.findAll();
+        return projects.findAllByOrderByCreatedAtDesc();
     }
 
     public Project get(UUID id) {

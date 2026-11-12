@@ -16,8 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,6 +63,21 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"gitUrl\":\"file:///etc/passwd\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void listReturnsNewestFirst() throws Exception {
+        for (String repo : new String[]{"first", "second", "third"}) {
+            mvc.perform(post("/api/projects")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"gitUrl\":\"https://github.com/acme/" + repo + ".git\"}"))
+                    .andExpect(status().isAccepted());
+            Thread.sleep(5); // keep createdAt strictly increasing on coarse clocks
+        }
+
+        mvc.perform(get("/api/projects"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name").value(contains("third", "second", "first")));
     }
 
     @Test

@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodeMind Web
 
-## Getting Started
+Next.js 15 (App Router) + Tailwind frontend for the CodeMind API.
 
-First, run the development server:
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The API must be running on `http://localhost:8080` (override with `NEXT_PUBLIC_API_URL`). The API only
+allows CORS from `http://localhost:3000`, so keep the dev server on that port.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Check
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
 
-## Learn More
+## Pages
 
-To learn more about Next.js, take a look at the following resources:
+| Route            | What it does                                                                |
+| ---------------- | --------------------------------------------------------------------------- |
+| `/`              | Repository dashboard: status counts, list newest first, polls while indexing |
+| `/projects/new`  | Register a Git URL (HTTPS or `git@host:owner/repo`) and optional name       |
+| `/projects/[id]` | Ingestion progress, error details, re-index, and the detected tech stack    |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `lib/api.ts`: typed client for `/api/projects` (types mirror `ProjectResponse` in the API)
+- `lib/usePoll.ts`: fetch on mount and on window focus, then poll while a predicate holds
+- `lib/format.ts`: relative times and short repo URLs
+- `components/`: header, status badge, error banner
+- Theme colours are CSS variables in `app/globals.css` (light and dark), exposed to Tailwind as
+  `bg`, `surface`, `fg`, `muted`, `line`, `hover` and `accent` in `tailwind.config.ts`.
