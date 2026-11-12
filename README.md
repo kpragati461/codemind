@@ -57,3 +57,6 @@ cd api && mvnw.cmd test
 cd analysis && .venv/Scripts/python -m pytest -q
 cd web && npx tsc --noEmit && npm run lint && npm run build
 ```
+
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same three checks on
+every pull request and on every push to `main`.
