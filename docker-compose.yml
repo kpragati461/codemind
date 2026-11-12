@@ -1,0 +1,15 @@
+# Optional. Docker is not required for local H2 development.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: codemind
+      POSTGRES_USER: codemind
+      POSTGRES_PASSWORD: codemind
+    ports:
+      - "5432:5432"
+    volumes:
+      - codemind-pg:/var/lib/postgresql/data
+
+volumes:
+  codemind-pg:
